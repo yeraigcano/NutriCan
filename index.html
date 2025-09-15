@@ -1,0 +1,1301 @@
+<!-- 
+    Guía de Nutrición Canina NutriCan
+    Versión con comentarios detallados en español e inglés.
+
+    El propósito de este código es crear una página web interactiva y responsiva que actúa como una guía de nutrición y bienestar para perros.
+    Incluye secciones para:
+    1. Fundamentos nutricionales y cálculo de calorías.
+    2. Tipos de dietas.
+    3. Un planificador de dieta semanal.
+    4. Un registro de peso en tiempo real (utilizando Firebase).
+    5. Tablas de alimentos seguros y prohibidos.
+    6. Recomendaciones de ejercicio.
+
+    Todo el HTML, CSS (mediante Tailwind CSS) y JavaScript están contenidos en un solo archivo para facilitar su uso y despliegue.
+    
+    This is an interactive and responsive web page that serves as a guide for dog nutrition and wellness.
+    It includes sections for:
+    1. Nutritional fundamentals and calorie calculation.
+    2. Types of diets.
+    3. A weekly diet planner.
+    4. A real-time weight tracker (using Firebase).
+    5. Tables of safe and prohibited foods.
+    6. Exercise recommendations.
+
+    All HTML, CSS (via Tailwind CSS), and JavaScript are contained in a single file for easy use and deployment.
+-->
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <!-- Define el conjunto de caracteres. / Defines the character set. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Configura la vista para que sea responsiva en todos los dispositivos. / Sets the viewport for responsive design on all devices. -->
+    <link rel="icon" type="image/png" href="favicon/favicon.png"/>
+    <title>NutriCan</title>
+    <!-- Título de la página que aparece en la pestaña del navegador. / Title of the page that appears in the browser tab. -->
+    
+    <!-- Carga la librería de Tailwind CSS para un diseño rápido y responsivo. / Loads the Tailwind CSS library for quick and responsive styling. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Carga la librería Chart.js para crear gráficos dinámicos. / Loads the Chart.js library to create dynamic charts. -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Carga la librería jsPDF para generar archivos PDF. / Loads the jsPDF library to generate PDF files. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Carga html2canvas para convertir HTML en una imagen (necesario para el PDF). / Loads html2canvas to convert HTML into an image (necessary for the PDF). -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.js"></script>
+
+    <!-- Carga la fuente "Inter" de Google Fonts. / Loads the "Inter" font from Google Fonts. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Carga la fuente "Pacifico" para el logo. / Loads the "Pacifico" font for the logo. -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <!-- Carga Font Awesome para usar íconos. / Loads Font Awesome for icons. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS personalizado para temas claro/oscuro y efectos. / Custom CSS for light/dark themes and effects. -->
+    <style>
+        /* Variables CSS para el tema claro. / CSS variables for the light theme. */
+        :root {
+            --bg-color: #F8F6F2;
+            --text-color: #333333; /* Más oscuro / Darker */
+            --card-bg: #FFFFFF;
+            --border-color: #E0E0E0;
+            --nav-bg: rgba(248, 246, 242, 0.8);
+            --primary-color: #8D6E63;
+            --primary-hover: #795548;
+            --secondary-bg: #EFEBE9;
+            --secondary-text: #5D4037;
+            --secondary-hover-bg: #D7CCC8;
+            --accent-color: #BCAAA4;
+            --result-bg: #F5F5F5;
+            --light-text: #F8F6F2; /* Color de letra claro para el ID de usuario / Light text color for user ID */
+        }
+        /* Variables CSS para el tema oscuro. / CSS variables for the dark theme. */
+        .dark {
+            --bg-color: #1A202C;
+            --text-color: #E2E8F0;
+            --card-bg: #2D3748;
+            --border-color: #4A5568;
+            --nav-bg: rgba(45, 55, 72, 0.8);
+            --primary-color: #A1887F;
+            --primary-hover: #BCAAA4;
+            --secondary-bg: #4A5568;
+            --secondary-text: #F7FAFC;
+            --secondary-hover-bg: #64748B;
+            --accent-color: #A1887F;
+            --result-bg: #374151;
+            --light-text: #F8F6F2; /* Color de letra claro para el ID de usuario / Light text color for user ID */
+        }
+        /* Estilos generales del cuerpo, fuente y transiciones. / General body, font, and transition styles. */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        /* Estilo para el logo de NutriCan. / Style for the NutriCan logo. */
+        .logo-text {
+            font-family: 'Pacifico', cursive; /* Fuente del logo. / Logo font. */
+            font-size: 1.5rem; /* Tamaño del logo. / Logo size. */
+            font-weight: 400; /* Peso de la fuente. / Font weight. */
+            background: linear-gradient(90deg, var(--primary-color) 0%, #A1887F 100%); /* Degradado. / Gradient. */
+            -webkit-background-clip: text; /* Aplica el degradado al texto. / Applies the gradient to the text. */
+            -webkit-text-fill-color: transparent; /* Hace el texto transparente para que el degradado sea visible. / Makes the text transparent to show the gradient. */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1); /* Sombra sutil. / Subtle shadow. */
+        }
+        /* Estilos del contenedor del gráfico. / Chart container styles. */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        /* Media query para hacer el gráfico más alto en pantallas medianas. / Media query to make the chart taller on medium screens. */
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        /* Estilos para los enlaces de navegación. / Styles for navigation links. */
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        /* Estilos para los enlaces de navegación al pasar el ratón o estar activos. / Styles for navigation links on hover or when active. */
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        /* Estilos generales para los botones. / General button styles. */
+        .btn {
+            transition: transform 0.2s, background-color 0.3s, color 0.3s;
+        }
+        /* Efecto de elevación al pasar el ratón por los botones. / Lift effect on button hover. */
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        /* Estilos para el botón primario. / Styles for the primary button. */
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: #FFFFFF;
+        }
+        /* Cambio de color del botón primario al pasar el ratón. / Primary button color change on hover. */
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        /* Estilos para el botón secundario. / Styles for the secondary button. */
+        .btn-secondary {
+            background-color: var(--secondary-bg);
+            color: var(--secondary-text);
+        }
+        /* Cambio de color del botón secundario al pasar el ratón o estar activo. / Secondary button color change on hover or when active. */
+        .btn-secondary.active, .btn-secondary:hover {
+            background-color: var(--secondary-hover-bg);
+        }
+        /* Estilos para el texto de acento. / Styles for accent text. */
+        .accent-text {
+            color: var(--accent-color);
+        }
+        /* Estilos para las tarjetas. / Styles for cards. */
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        /* Efecto de elevación y sombra en las tarjetas al pasar el ratón. / Lift and shadow effect on card hover. */
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        /* Estilo para las filas pares de la tabla en el tema claro. / Style for even table rows in the light theme. */
+        .table-row-group tr:nth-child(even) {
+            background-color: rgba(239, 235, 233, 0.5);
+        }
+        /* Estilo para las filas pares de la tabla en el tema oscuro. / Style for even table rows in the dark theme. */
+        .dark .table-row-group tr:nth-child(even) {
+            background-color: #374151;
+        }
+        /* Estilos para el gráfico de peso. / Styles for the weight chart. */
+        #weight-chart {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        /* Estilos para la sección de estado de autenticación. / Styles for the authentication status section. */
+        #auth-status {
+            background-color: #1A202C; /* Fondo oscuro fijo. / Fixed dark background. */
+            color: var(--light-text); /* Color de texto claro. / Light text color. */
+        }
+    </style>
+</head>
+<body class="text-text-color">
+
+    <!-- Encabezado de la página con navegación. / Page header with navigation. -->
+    <header class="bg-[var(--nav-bg)] backdrop-blur-lg shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- Logo y nombre de la marca. / Logo and brand name. -->
+            <!-- Se ha modificado el título del logo para usar la nueva clase CSS `logo-text`. -->
+            <!-- The logo title has been modified to use the new CSS class `logo-text`. -->
+            <a href="#" class="text-xl font-bold flex-shrink-0 mr-4 text-[var(--text-color)] flex items-center">
+                <i class="fas fa-paw mr-2 text-[var(--primary-color)]"></i><span class="logo-text">NutriCan</span>
+            </a>
+            <!-- Menú de navegación para escritorio. / Desktop navigation menu. -->
+            <div class="hidden md:flex space-x-6 items-center" id="desktop-nav">
+                <a href="#fundamentos" class="nav-link pb-1">Fundamentos</a>
+                <a href="#dietas" class="nav-link pb-1">Dietas</a>
+                <a href="#planificador" class="nav-link pb-1">Planificador</a>
+                <a href="#registro" class="nav-link pb-1">Registro de Peso</a>
+                <a href="#alimentos" class="nav-link pb-1">Alimentos</a>
+                <a href="#ejercicio" class="nav-link pb-1">Ejercicio</a>
+            </div>
+            <!-- Botones para cambiar el tema y el menú móvil. / Buttons for theme toggle and mobile menu. -->
+            <div class="flex items-center space-x-4">
+                <button id="theme-toggle" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <i class="fas fa-sun text-[var(--text-color)] dark:text-gray-200"></i>
+                </button>
+                <button id="menu-toggle" class="md:hidden p-2 rounded-md">
+                    <i class="fas fa-bars text-[var(--text-color)] dark:text-gray-200 text-lg"></i>
+                </button>
+            </div>
+        </nav>
+        <!-- Menú de navegación móvil (oculto por defecto). / Mobile navigation menu (hidden by default). -->
+        <div id="mobile-menu" class="hidden md:hidden bg-[var(--nav-bg)] backdrop-blur-lg border-t border-[var(--border-color)]">
+            <div class="flex flex-col items-center py-4 space-y-2">
+                <a href="#fundamentos" class="nav-link pb-1 text-lg">Fundamentos</a>
+                <a href="#dietas" class="nav-link pb-1 text-lg">Dietas</a>
+                <a href="#planificador" class="nav-link pb-1 text-lg">Planificador</a>
+                <a href="#registro" class="nav-link pb-1 text-lg">Registro de Peso</a>
+                <a href="#alimentos" class="nav-link pb-1 text-lg">Alimentos</a>
+                <a href="#ejercicio" class="nav-link pb-1 text-lg">Ejercicio</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal de la página. / Main content of the page. -->
+    <main class="container mx-auto px-4 py-8 md:py-12">
+        
+        <!-- Sección principal (Hero) de la página. / Main (Hero) section of the page. -->
+        <section id="hero" class="text-center mb-16 md:mb-24">
+            <h1 class="text-4xl md:text-6xl font-bold text-[var(--text-color)] mb-4">Bienestar Canino a un Bocado de Distancia</h1>
+            <p class="text-lg md:text-xl text-[var(--text-color)] max-w-3xl mx-auto">
+                Una guía completa y basada en ciencia para entender y mejorar la nutrición y el estilo de vida de tu mejor amigo.
+            </p>
+        </section>
+
+        <!-- Sección de fundamentos nutricionales. / Nutritional fundamentals section. -->
+        <section id="fundamentos" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Fundamentos Nutricionales</h2>
+            <p class="text-center text-[var(--text-color)] mb-10 max-w-2xl mx-auto">
+                La base de una vida sana reside en el equilibrio correcto de macronutrientes. Estos son esenciales para la energía, el crecimiento y la reparación celular. Las necesidades varían según la etapa de vida. Usa los botones para ver la distribución ideal.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="order-2 md:order-1">
+                    <h3 class="text-2xl font-semibold mb-4 text-[var(--text-color)]">Macronutrientes Esenciales</h3>
+                    <div id="macros-text-content"></div>
+                </div>
+                <div class="flex flex-col items-center order-1 md:order-2">
+                    <div class="flex justify-center space-x-2 mb-4">
+                        <!-- Botones para seleccionar la etapa de vida. / Buttons to select the life stage. -->
+                        <button id="btn-puppy" class="btn btn-secondary px-4 py-2 rounded-lg text-sm font-semibold">Cachorro</button>
+                        <button id="btn-adult" class="btn btn-secondary px-4 py-2 rounded-lg text-sm font-semibold active">Adulto</button>
+                        <button id="btn-senior" class="btn btn-secondary px-4 py-2 rounded-lg text-sm font-semibold">Senior</button>
+                    </div>
+                    <!-- Contenedor para el gráfico de macronutrientes. / Container for the macronutrients chart. -->
+                    <div class="chart-container">
+                        <canvas id="macrosChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sección de tipos de dietas. / Types of diets section. -->
+        <section id="dietas" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Tipos de Dietas</h2>
+             <p class="text-center text-[var(--text-color)] mb-10 max-w-2xl mx-auto">
+                Existen diversas filosofías sobre la alimentación canina. Cada una tiene sus ventajas y consideraciones. Aquí te presentamos una comparativa objetiva para que tomes una decisión informada junto a tu veterinario.
+            </p>
+            <!-- Cuadrícula de tarjetas con información de las dietas. / Grid of cards with diet information. -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Tarjeta para el Pienso (Seco). / Card for Kibble (Dry). -->
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 text-[var(--text-color)]">Pienso (Seco)</h3>
+                    <p class="text-[var(--text-color)] mb-4 flex-grow">Conveniente y formulado para ser completo. Ayuda a la salud dental.</p>
+                    <ul class="text-sm space-y-2">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Fácil de almacenar y medir.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Larga vida útil.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Bajo en humedad.</span></li>
+                    </ul>
+                </div>
+                <!-- Tarjeta para la Comida Húmeda. / Card for Wet Food. -->
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 text-[var(--text-color)]">Comida Húmeda</h3>
+                    <p class="text-[var(--text-color)] mb-4 flex-grow">Altamente palatable y con alto contenido de agua, ideal para la hidratación.</p>
+                    <ul class="text-sm space-y-2">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Muy apetecible.</span></li>
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Aporta líquidos.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Menor vida útil y más cara.</span></li>
+                    </ul>
+                </div>
+                <!-- Tarjeta para la Dieta BARF / Cruda. / Card for BARF / Raw Diet. -->
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 text-[var(--text-color)]">Dieta BARF / Cruda</h3>
+                    <p class="text-[var(--text-color)] mb-4 flex-grow">Basada en huesos, carne y vegetales crudos. Busca imitar la dieta ancestral.</p>
+                     <ul class="text-sm space-y-2">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Ingredientes sin procesar.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Riesgo de desequilibrios.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Riesgo bacteriano.</span></li>
+                    </ul>
+                </div>
+                <!-- Tarjeta para la Comida Casera. / Card for Homemade Food. -->
+                <div class="card p-6 flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 text-[var(--text-color)]">Comida Casera</h3>
+                    <p class="text-[var(--text-color)] mb-4 flex-grow">Control total sobre los ingredientes, cocinando específicamente para tu perro.</p>
+                    <ul class="text-sm space-y-2">
+                        <li class="flex items-start"><i class="fas fa-check-circle text-green-500 mr-2 mt-1"></i><span>Ideal para alergias.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Requiere formulación experta.</span></li>
+                        <li class="flex items-start"><i class="fas fa-times-circle text-red-500 mr-2 mt-1"></i><span>Consume tiempo.</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección del planificador de dieta. / Diet planner section. -->
+        <section id="planificador" class="mb-16 md:mb-24 scroll-mt-20 card p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Planificador Personal</h2>
+            <p class="text-center text-[var(--text-color)] mb-10 max-w-3xl mx-auto">
+                Una herramienta en dos pasos. Primero, calcula las necesidades calóricas de tu perro. Después, genera un plan de dieta semanal de ejemplo basado en esos resultados. Recuerda, es una estimación que debe ser ajustada bajo supervisión veterinaria.
+            </p>
+            <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                <div class="space-y-6">
+                     <h3 class="text-2xl font-semibold text-[var(--text-color)]">Paso 1: Calcular Calorías</h3>
+                    <!-- Formulario para el cálculo de calorías. / Form for calorie calculation. -->
+                    <form id="calories-form" class="space-y-4">
+                        <div>
+                            <label for="weight" class="block font-semibold">Peso (kg)</label>
+                            <input type="number" step="0.1" id="weight" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md focus:ring-2 focus:ring-[var(--primary-color)] bg-[var(--card-bg)]" placeholder="Ej: 15" required>
+                        </div>
+                         <div>
+                            <label for="age-years" class="block font-semibold">Edad (años)</label>
+                            <input type="number" id="age-years" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md focus:ring-2 focus:ring-[var(--primary-color)] bg-[var(--card-bg)]" placeholder="Ej: 3" required>
+                        </div>
+                        <div>
+                            <label for="activity" class="block font-semibold">Nivel de Actividad</label>
+                            <select id="activity" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md bg-[var(--card-bg)]">
+                                <option value="low">Bajo / Paseos tranquilos</option>
+                                <option value="normal" selected>Normal / Juego diario</option>
+                                <option value="active">Activo / Perro de trabajo</option>
+                                <option value="neutered">Castrado / Actividad normal</option>
+                                <option value="inactive">Inactivo / Propenso a obesidad</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="food-type" class="block font-semibold">Tipo de Dieta</label>
+                            <select id="food-type" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md bg-[var(--card-bg)]">
+                                <option value="pienso" selected>Pienso (seco)</option>
+                                <option value="humeda">Comida Húmeda</option>
+                                <option value="cocinada">Comida Cocinada</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full btn btn-primary font-bold py-3 rounded-md">Calcular Necesidades</button>
+                    </form>
+                </div>
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-semibold text-[var(--text-color)]">Paso 2: Generar Dieta Semanal</h3>
+                    <!-- Contenedor para los resultados de las calorías y la dieta. / Container for calorie and diet results. -->
+                    <div id="results-container" class="p-6 bg-[var(--result-bg)] rounded-lg min-h-[200px]">
+                        <div id="calorie-result">
+                            <p class="text-center">Completa el Paso 1 para ver los resultados y generar una dieta.</p>
+                        </div>
+                        <div id="diet-plan-result" class="hidden mt-4"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de registro de peso. / Weight tracker section. -->
+        <section id="registro" class="mb-16 md:mb-24 scroll-mt-20 card p-6 md:p-8">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Registro de Peso</h2>
+            <p class="text-center text-[var(--text-color)] mb-10 max-w-3xl mx-auto">
+                Lleva un control del peso de tu mascota a lo largo del tiempo. Podrás ver un historial de registros y descargar un informe profesional en PDF.
+            </p>
+            <div class="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-semibold text-[var(--text-color)]">Añadir Nuevo Registro</h3>
+                    <!-- Formulario para añadir un nuevo registro de peso. / Form to add a new weight record. -->
+                    <form id="weight-form" class="space-y-4">
+                        <div>
+                            <label for="animal-name" class="block font-semibold">Nombre de la mascota</label>
+                            <input type="text" id="animal-name" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md focus:ring-2 focus:ring-[var(--primary-color)] bg-[var(--card-bg)]" placeholder="Ej: Toby" required>
+                        </div>
+                        <div>
+                            <label for="animal-weight" class="block font-semibold">Peso (kg)</label>
+                            <input type="number" step="0.1" id="animal-weight" class="w-full mt-1 p-2 border border-[var(--border-color)] rounded-md focus:ring-2 focus:ring-[var(--primary-color)] bg-[var(--card-bg)]" placeholder="Ej: 15.2" required>
+                        </div>
+                        <button type="submit" class="w-full btn btn-primary font-bold py-3 rounded-md">
+                            <i class="fas fa-plus mr-2"></i>Añadir Registro
+                        </button>
+                    </form>
+                </div>
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-semibold text-[var(--text-color)]">Historial de Registros</h3>
+                    <div id="records-container" class="space-y-4">
+                        <!-- Mensaje de estado de autenticación. / Authentication status message. -->
+                        <div id="auth-status" class="p-4 bg-gray-800 text-gray-200 dark:bg-gray-700 dark:text-gray-200 rounded-md text-center">
+                            Conectando a la base de datos...
+                        </div>
+                        <!-- Mensaje que se muestra si no hay registros. / Message shown if there are no records. -->
+                        <div id="no-records-message" class="hidden text-center text-gray-500 dark:text-gray-400">
+                             Aún no tienes registros de peso.
+                        </div>
+                        <!-- Tabla para mostrar los registros de peso (oculta por defecto). / Table to display weight records (hidden by default). -->
+                        <table class="w-full text-left hidden" id="weight-records-table">
+                            <thead>
+                                <tr class="border-b dark:border-gray-600">
+                                    <th class="py-2">Fecha</th>
+                                    <th class="py-2">Mascota</th>
+                                    <th class="py-2">Peso (kg)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- Botón para descargar el historial como PDF (oculto por defecto). / Button to download history as a PDF (hidden by default). -->
+                    <button id="download-pdf-btn" class="w-full btn btn-secondary font-bold py-3 rounded-md hidden">
+                        <i class="fas fa-download mr-2"></i>Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección de alimentos seguros y prohibidos. / Safe and prohibited foods section. -->
+        <section id="alimentos" class="mb-16 md:mb-24 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Alimentos Seguros y Prohibidos</h2>
+            <p class="text-center text-[var(--text-color)] mb-10 max-w-2xl mx-auto">
+                No todos los alimentos para humanos son seguros para los perros. Consulta estas tablas para asegurarte de que lo que le das a tu mascota no sea perjudicial.
+            </p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Tarjeta para alimentos seguros. / Card for safe foods. -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-green-700 dark:text-green-500 mb-4"><i class="fas fa-shield-alt mr-2"></i>Alimentos Seguros</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b dark:border-gray-600"><th class="py-2">Alimento</th><th class="py-2 hidden md:table-cell">Beneficios</th></tr>
+                        </thead>
+                        <tbody id="safe-foods-table" class="table-row-group"></tbody>
+                    </table>
+                </div>
+                <!-- Tarjeta para alimentos prohibidos. / Card for prohibited foods. -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-bold text-red-700 dark:text-red-500 mb-4"><i class="fas fa-exclamation-triangle mr-2"></i>Alimentos Prohibidos</h3>
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b dark:border-gray-600"><th class="py-2">Alimento</th><th class="py-2 hidden md:table-cell">Riesgo</th></tr>
+                        </thead>
+                        <tbody id="unsafe-foods-table" class="table-row-group"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Sección de ejercicio. / Exercise section. -->
+        <section id="ejercicio" class="scroll-mt-20">
+            <h2 class="text-3xl font-bold text-center mb-2 text-[var(--text-color)]">Ejercicio: El Complemento Perfecto</h2>
+            <p class="text-center text-[var(--text-color)] mb-10 max-w-2xl mx-auto">
+                El ejercicio es tan crucial como la dieta. Mantiene un peso saludable, estimula la mente y fortalece vuestro vínculo. Usa los filtros para encontrar recomendaciones generales.
+            </p>
+            <!-- Filtros para las recomendaciones de ejercicio. / Filters for exercise recommendations. -->
+            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                <select id="size-filter" class="p-2 border border-[var(--border-color)] rounded-md bg-[var(--card-bg)]">
+                    <option value="all">Todos los tamaños</option>
+                    <option value="small">Pequeño (<10kg)</option>
+                    <option value="medium">Mediano (10-25kg)</option>
+                    <option value="large">Grande (>25kg)</option>
+                </select>
+                <select id="energy-filter" class="p-2 border border-[var(--border-color)] rounded-md bg-[var(--card-bg)]">
+                    <option value="all">Todos los niveles de energía</option>
+                    <option value="low">Baja</option>
+                    <option value="medium">Media</option>
+                    <option value="high">Alta</option>
+                </select>
+            </div>
+            <!-- Contenedor para la lista de ejercicios. / Container for the exercise list. -->
+            <div id="exercise-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            </div>
+        </section>
+
+    </main>
+    
+    <!-- Pie de página. / Page footer. -->
+    <footer class="bg-gray-800 dark:bg-gray-900 text-white dark:text-gray-200 text-center py-6 mt-12">
+        <div class="container mx-auto px-4">
+            <p>&copy; 2025 NutriCan. Creado con fines informativos.</p>
+            <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Consulta siempre a un veterinario para el cuidado de tu mascota.</p>
+        </div>
+    </footer>
+
+    <!-- Script de JavaScript principal. / Main JavaScript script. -->
+    <script type="module">
+        // Importa las funciones necesarias de las librerías de Firebase.
+        // Imports necessary functions from Firebase libraries.
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variables globales de Firebase proporcionadas por el entorno de Canvas.
+        // Global Firebase variables provided by the Canvas environment.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Declara las variables para la base de datos y la autenticación de Firebase.
+        // Declares variables for Firebase database and authentication.
+        let db, auth;
+        let userId = null;
+
+        // Objeto de estado global para la aplicación.
+        // Global state object for the application.
+        const appState = {
+            calculatedKcal: null,
+            dogAgeCategory: 'adult',
+        };
+
+        // Constantes para el tema de la interfaz.
+        // Constants for the UI theme.
+        const THEME_KEY = 'theme';
+        const DARK_CLASS = 'dark';
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const htmlTag = document.documentElement;
+        
+        // Función para inicializar el tema de la página (claro u oscuro).
+        // Function to initialize the page theme (light or dark).
+        const initTheme = () => {
+            // Recupera el tema guardado en el almacenamiento local.
+            // Retrieves the theme saved in local storage.
+            const storedTheme = localStorage.getItem(THEME_KEY);
+            // Verifica si el sistema operativo prefiere el tema oscuro.
+            // Checks if the operating system prefers the dark theme.
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            // Determina si el tema actual es oscuro.
+            // Determines if the current theme is dark.
+            const isDark = storedTheme === 'dark' || (storedTheme === null && prefersDark);
+            
+            // Alterna la clase 'dark' en el elemento <html>.
+            // Toggles the 'dark' class on the <html> element.
+            htmlTag.classList.toggle(DARK_CLASS, isDark);
+            // Actualiza el ícono del botón de tema.
+            // Updates the theme button icon.
+            updateThemeIcon(isDark);
+
+            // Añade un listener al botón para cambiar el tema.
+            // Adds a listener to the button to toggle the theme.
+            themeToggleBtn.addEventListener('click', () => {
+                const isCurrentlyDark = htmlTag.classList.toggle(DARK_CLASS);
+                // Guarda la preferencia en el almacenamiento local.
+                // Saves the preference in local storage.
+                localStorage.setItem(THEME_KEY, isCurrentlyDark ? 'dark' : 'light');
+                // Actualiza el ícono del botón.
+                // Updates the button icon.
+                updateThemeIcon(isCurrentlyDark);
+            });
+        };
+        
+        // Función para actualizar el ícono del sol/luna.
+        // Function to update the sun/moon icon.
+        const updateThemeIcon = (isDark) => {
+            const icon = themeToggleBtn.querySelector('i');
+            // Cambia las clases del ícono según el tema.
+            // Changes the icon's classes based on the theme.
+            icon.className = isDark ? 'fas fa-moon text-gray-200' : 'fas fa-sun text-[var(--text-color)]';
+        };
+
+        // Función para inicializar el menú de navegación móvil.
+        // Function to initialize the mobile navigation menu.
+        const initMobileMenu = () => {
+            const menuToggleBtn = document.getElementById('menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+            // Alterna la visibilidad del menú móvil al hacer clic en el botón.
+            // Toggles the visibility of the mobile menu on button click.
+            menuToggleBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            // Cierra el menú móvil al hacer clic en cualquier enlace dentro de él.
+            // Hides the mobile menu when any link inside it is clicked.
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
+            });
+        };
+
+        // Datos para los gráficos y descripciones de macronutrientes.
+        // Data for macronutrient charts and descriptions.
+        const macrosData = {
+            puppy: {
+                labels: ['Proteínas', 'Grasas', 'Carbs'],
+                data: [28, 20, 52],
+                colors: ['#81C784', '#FFB74D', '#64B5F6'],
+                textContent: `<p class="mb-4">Necesitan más proteínas y grasas para su rápido crecimiento y desarrollo. La energía es clave.</p><ul class="space-y-2 list-disc list-inside"><li><strong>Proteínas (~28%):</strong> Desarrollo muscular y de órganos.</li><li><strong>Grasas (~20%):</strong> Fuente de energía concentrada.</li><li><strong>Carbohidratos (~52%):</strong> Para jugar y crecer.</li></ul>`
+            },
+            adult: {
+                labels: ['Proteínas', 'Grasas', 'Carbs'],
+                data: [25, 15, 60],
+                colors: ['#4CAF50', '#FFA726', '#42A5F5'],
+                textContent: `<p class="mb-4">Requieren una dieta balanceada para mantener su condición corporal, energía y salud general.</p><ul class="space-y-2 list-disc list-inside"><li><strong>Proteínas (~25%):</strong> Mantenimiento muscular.</li><li><strong>Grasas (~15%):</strong> Energía, salud de piel y pelaje.</li><li><strong>Carbohidratos (~60%):</strong> Principal fuente de energía.</li></ul>`
+            },
+            senior: {
+                labels: ['Proteínas', 'Grasas', 'Carbs'],
+                data: [24, 12, 64],
+                colors: ['#66BB6A', '#FF9800', '#2196F3'],
+                textContent: `<p class="mb-4">Menos calorías para evitar sobrepeso, pero proteínas de alta calidad para la masa muscular.</p><ul class="space-y-2 list-disc list-inside"><li><strong>Proteínas (~24%):</strong> Alta digestibilidad para salud muscular.</li><li><strong>Grasas (~12%):</strong> Menos cantidad para controlar el peso.</li><li><strong>Carbohidratos (~64%):</strong> Energía y fibra para salud digestiva.</li></ul>`
+            }
+        };
+
+        // Variable para el objeto del gráfico.
+        // Variable for the chart object.
+        let macrosChart;
+        // Función para inicializar el gráfico de macronutrientes.
+        // Function to initialize the macronutrients chart.
+        const initMacrosChart = () => {
+            const ctx = document.getElementById('macrosChart').getContext('2d');
+            macrosChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {},
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '60%',
+                    plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 14 } } } }
+                }
+            });
+            
+            // Función para actualizar los datos del gráfico según la etapa de vida.
+            // Function to update the chart data based on the life stage.
+            const updateChart = (stage) => {
+                const chartData = macrosData[stage];
+                macrosChart.data = {
+                    labels: chartData.labels,
+                    datasets: [{
+                        data: chartData.data,
+                        backgroundColor: chartData.colors,
+                        borderColor: htmlTag.classList.contains('dark') ? '#2D3748' : '#FFFFFF',
+                        borderWidth: 4
+                    }]
+                };
+                macrosChart.update();
+                document.getElementById('macros-text-content').innerHTML = chartData.textContent;
+                document.querySelectorAll('#fundamentos button').forEach(b => b.classList.remove('active'));
+                document.getElementById(`btn-${stage}`).classList.add('active');
+            };
+
+            // Asigna los listeners a los botones de etapa de vida.
+            // Assigns listeners to the life stage buttons.
+            document.getElementById('btn-puppy').addEventListener('click', () => updateChart('puppy'));
+            document.getElementById('btn-adult').addEventListener('click', () => updateChart('adult'));
+            document.getElementById('btn-senior').addEventListener('click', () => updateChart('senior'));
+            // Inicia el gráfico con los datos del perro adulto.
+            // Initializes the chart with adult dog data.
+            updateChart('adult');
+        };
+
+        // Factores para calcular las necesidades calóricas.
+        // Factors to calculate caloric needs.
+        const activityFactors = {
+            puppy: { low: 2.0, normal: 2.5, active: 3.0, neutered: 1.8, inactive: 1.5 },
+            adult: { low: 1.2, normal: 1.4, active: 1.6, neutered: 1.0, inactive: 0.8 },
+            senior: { low: 1.0, normal: 1.1, active: 1.2, neutered: 0.9, inactive: 0.7 }
+        };
+
+        // Calorías por gramo de cada tipo de comida.
+        // Calories per gram for each type of food.
+        const foodCalories = {
+            pienso: 3.5, // kcal per gram
+            humeda: 1.0, // kcal per gram
+            cocinada: 1.5 // kcal per gram
+        };
+
+        // Instrucciones de preparación de la comida.
+        // Food preparation instructions.
+        const preparationInstructions = {
+            pienso: {
+                title: 'Pienso (seco)',
+                instructions: 'Asegúrate de medir la cantidad con precisión usando una báscula o taza medidora. Sirve el pienso directamente en el comedero de tu perro. Es importante que siempre tenga acceso a agua fresca.'
+            },
+            humeda: {
+                title: 'Comida Húmeda',
+                instructions: 'La comida húmeda se sirve directamente. Aporta un extra de hidratación y es muy apetecible. Asegúrate de servir a temperatura ambiente.'
+            },
+        };
+
+        // Array con ejemplos de comidas cocinadas.
+        // Array with examples of cooked meals.
+        const cookedMeals = [
+            {
+                name: 'Pollo con Arroz y Zanahorias',
+                icon: 'fa-drumstick-bite',
+                description: 'Una comida clásica y fácil de digerir. Excelente para perros con estómagos sensibles.',
+                ingredients: (kcal) => {
+                    const proteinKcal = kcal * 0.40; // 40% de proteínas
+                    const carbKcal = kcal * 0.40; // 40% de carbohidratos
+                    const fatKcal = kcal * 0.20; // 20% de grasas
+                    const polloGrams = Math.round(proteinKcal / 1.65);
+                    const arrozGrams = Math.round(carbKcal / 1.3);
+                    const zanahoriasGrams = Math.round(fatKcal / 0.4);
+                    return [
+                        `<strong>Pollo (sin piel):</strong> ${polloGrams} g`,
+                        `<strong>Arroz blanco:</strong> ${arrozGrams} g`,
+                        `<strong>Zanahorias cocidas:</strong> ${zanahoriasGrams} g`
+                    ];
+                },
+                preparation: 'Cocina el pollo sin sal. Hierve el arroz y las zanahorias hasta que estén blandas. Mezcla todos los ingredientes una vez fríos.'
+            },
+            {
+                name: 'Pavo con Boniato y Brócoli',
+                icon: 'fa-turkey',
+                description: 'Alternativa al pollo, rica en proteínas. El boniato aporta carbohidratos complejos y el brócoli vitaminas.',
+                ingredients: (kcal) => {
+                     const proteinKcal = kcal * 0.45; // 45% de proteínas
+                     const carbKcal = kcal * 0.35; // 35% de carbohidratos
+                     const fatKcal = kcal * 0.20; // 20% de grasas
+                     const pavoGrams = Math.round(proteinKcal / 1.5);
+                     const boniatoGrams = Math.round(carbKcal / 0.86);
+                     const brocoliGrams = Math.round(fatKcal / 0.34);
+                     return [
+                        `<strong>Pavo (sin piel):</strong> ${pavoGrams} g`,
+                        `<strong>Boniato cocido:</strong> ${boniatoGrams} g`,
+                        `<strong>Brócoli al vapor:</strong> ${brocoliGrams} g`
+                     ];
+                },
+                preparation: 'Cocina el pavo sin sal. Hierve o cuece al vapor el boniato y el brócoli hasta que estén suaves. Combina todo y sirve.'
+            },
+            {
+                name: 'Ternera con Lentejas y Espinacas',
+                icon: 'fa-cow',
+                description: 'Una comida con alto contenido de hierro. Ideal para perros muy activos.',
+                ingredients: (kcal) => {
+                     const proteinKcal = kcal * 0.50; // 50% de proteínas
+                     const carbKcal = kcal * 0.30; // 30% de carbohidratos
+                     const fatKcal = kcal * 0.20; // 20% de grasas
+                     const terneraGrams = Math.round(proteinKcal / 2.5);
+                     const lentejasGrams = Math.round(carbKcal / 1.16);
+                     const espinacasGrams = Math.round(fatKcal / 0.23);
+                     return [
+                        `<strong>Ternera magra cocida:</strong> ${terneraGrams} g`,
+                        `<strong>Lentejas cocidas:</strong> ${lentejasGrams} g`,
+                        `<strong>Espinacas al vapor:</strong> ${espinacasGrams} g`
+                     ];
+                },
+                preparation: 'Cocina la ternera y las lentejas por separado. Cocina al vapor las espinacas. Mezcla y sirve cuando esté tibio.'
+            }
+        ];
+
+        // Array con ejemplos de comidas húmedas.
+        // Array with examples of wet foods.
+        const wetFoodVarieties = [
+            {
+                name: 'Pavo y Verduras',
+                icon: 'fa-turkey',
+                description: 'Comida húmeda a base de pavo, una proteína magra y fácil de digerir, con un mix de verduras para fibra y vitaminas.',
+                ingredients: (kcal) => {
+                    const pavoGrams = Math.round(kcal * 0.35 / 1.5); // 35% de kcal de pavo
+                    const verdurasGrams = Math.round(kcal * 0.25 / 0.5); // 25% de kcal de verduras mixtas
+                    const arrozGrams = Math.round(kcal * 0.40 / 1.3); // 40% de kcal de arroz
+                    return [
+                        `<strong>Pavo (picado):</strong> ${pavoGrams} g`,
+                        `<strong>Verduras (zanahorias, guisantes):</strong> ${verdurasGrams} g`,
+                        `<strong>Arroz integral cocido:</strong> ${arrozGrams} g`
+                    ];
+                },
+                preparation: 'Abre la lata/bolsa y sirve la porción necesaria en el comedero. No requiere preparación adicional. Asegúrate de que el agua fresca esté siempre disponible.',
+            },
+            {
+                name: 'Salmón y Arroz Integral',
+                icon: 'fa-fish',
+                description: 'Un menú rico en Omega-3 para la salud de la piel y el pelaje, con arroz integral para una digestión lenta y sostenida.',
+                ingredients: (kcal) => {
+                     const salmonGrams = Math.round(kcal * 0.40 / 2.0); // 40% de kcal de salmón
+                     const arrozGrams = Math.round(kcal * 0.60 / 1.3); // 60% de kcal de arroz
+                     return [
+                        `<strong>Salmón cocido:</strong> ${salmonGrams} g`,
+                        `<strong>Arroz integral cocido:</strong> ${arrozGrams} g`
+                     ];
+                },
+                preparation: 'Abre la lata/bolsa y sirve la porción necesaria en el comedero. No requiere preparación adicional. Asegúrate de que el agua fresca esté siempre disponible.',
+            },
+            {
+                name: 'Cordero y Boniatos',
+                icon: 'fa-sheep',
+                description: 'Una excelente fuente de proteína para perros con sensibilidad alimentaria, combinada con boniatos para energía y fibra.',
+                ingredients: (kcal) => {
+                     const corderoGrams = Math.round(kcal * 0.45 / 2.5); // 45% de kcal de cordero
+                     const boniatoGrams = Math.round(kcal * 0.55 / 0.86); // 55% de kcal de boniato
+                     return [
+                        `<strong>Cordero magro cocido:</strong> ${corderoGrams} g`,
+                        `<strong>Boniato cocido:</strong> ${boniatoGrams} g`
+                     ];
+                },
+                preparation: 'Sirve la porción calculada directamente del envase. Si tu perro es quisquilloso, puedes mezclarla con un poco de pienso para darle una textura diferente.',
+            }
+        ];
+
+        // Tiempos de comida por etapa de vida.
+        // Meal times by life stage.
+        const mealTimes = {
+            adult: ['Mañana', 'Noche'],
+            puppy: ['Mañana', 'Mediodía', 'Noche'],
+            senior: ['Mañana', 'Noche']
+        };
+
+        // Función para inicializar el planificador.
+        // Function to initialize the planner.
+        const initPlanner = () => {
+            const form = document.getElementById('calories-form');
+            const calorieResultEl = document.getElementById('calorie-result');
+            const dietPlanResultEl = document.getElementById('diet-plan-result');
+
+            // Listener para el envío del formulario de calorías.
+            // Listener for the calories form submission.
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const weight = parseFloat(document.getElementById('weight').value);
+                const ageYears = parseInt(document.getElementById('age-years').value);
+                const activityLevel = document.getElementById('activity').value;
+                const foodType = document.getElementById('food-type').value;
+
+                // Valida los datos de entrada.
+                // Validates the input data.
+                if (isNaN(weight) || weight <= 0 || isNaN(ageYears) || ageYears < 0) {
+                    calorieResultEl.innerHTML = '<p class="text-red-500 font-bold">Por favor, introduce un peso y edad válidos.</p>';
+                    dietPlanResultEl.classList.add('hidden');
+                    return;
+                }
+                
+                // Determina la categoría de edad del perro.
+                // Determines the dog's age category.
+                let ageCategory = 'adult';
+                if (ageYears < 1) ageCategory = 'puppy';
+                else if (ageYears >= 7) ageCategory = 'senior';
+                appState.dogAgeCategory = ageCategory;
+                
+                // Calcula el Requerimiento de Energía en Reposo (RER).
+                // Calculates the Resting Energy Requirement (RER).
+                const rer = 70 * Math.pow(weight, 0.75);
+                // Calcula el Requerimiento de Energía Metabólica (MER).
+                // Calculates the Metabolic Energy Requirement (MER).
+                const mer = rer * activityFactors[ageCategory][activityLevel];
+                appState.calculatedKcal = Math.round(mer);
+                appState.foodType = foodType;
+
+                // Muestra el resultado de las calorías.
+                // Displays the calorie result.
+                calorieResultEl.innerHTML = `
+                    <h4 class="font-bold text-lg text-[var(--text-color)]">Necesidades Estimadas</h4>
+                    <p class="text-3xl font-bold text-[var(--primary-color)] my-2">${appState.calculatedKcal} kcal/día</p>
+                    <p class="text-sm">Esta es una estimación para un perro de <strong>${weight} kg</strong> (${ageCategory}) con actividad <strong>${activityLevel}</strong>.</p>
+                    <button id="generate-diet-btn" class="w-full btn btn-secondary font-bold py-2 rounded-md mt-4">Generar Dieta Semanal</button>
+                `;
+                dietPlanResultEl.classList.add('hidden');
+
+                // Asigna el listener al nuevo botón para generar el plan de dieta.
+                // Assigns a listener to the new button to generate the diet plan.
+                document.getElementById('generate-diet-btn').addEventListener('click', generateWeeklyDietPlan);
+            });
+        };
+
+        // Función para generar y mostrar el plan de dieta semanal.
+        // Function to generate and display the weekly diet plan.
+        const generateWeeklyDietPlan = () => {
+            if (!appState.calculatedKcal || !appState.foodType) return;
+
+            const kcal = appState.calculatedKcal;
+            const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+            const dailyDietType = appState.foodType;
+            
+            let planHTML = `
+                <h4 class="font-bold text-xl text-[var(--text-color)] mb-4">Plan de Dieta Semanal de ${dailyDietType === 'pienso' ? preparationInstructions.pienso.title : 'Comida Cocinada o Húmeda Variada'}</h4>
+                <p class="text-sm mb-4">Este plan se basa en el tipo de comida que has elegido. Las cantidades están ajustadas a las necesidades calóricas diarias de tu perro. Para las dietas variadas, el plan rota entre 3 opciones.</p>
+                <div class="space-y-2">
+            `;
+
+            for (let i = 0; i < 7; i++) {
+                const day = daysOfWeek[i];
+                
+                let dailyContent;
+                let meal;
+                const totalGrams = Math.round(kcal / foodCalories[dailyDietType]);
+                const mealsPerDay = mealTimes[appState.dogAgeCategory].length;
+                const gramsPerMeal = Math.round(totalGrams / mealsPerDay);
+
+                let mealScheduleHtml = `<h6 class="font-bold mt-4">Horario de comidas:</h6>`;
+                mealTimes[appState.dogAgeCategory].forEach(time => {
+                    mealScheduleHtml += `<p class="text-sm mt-1">- ${time}: ${gramsPerMeal} g</p>`;
+                });
+                
+                // Genera el contenido específico para cada tipo de dieta.
+                // Generates specific content for each diet type.
+                if (dailyDietType === 'cocinada') {
+                    meal = cookedMeals[i % cookedMeals.length];
+                    const ingredientsList = meal.ingredients(kcal).map(item => `<li>${item}</li>`).join('');
+                    dailyContent = `
+                        <div class="p-4 bg-[var(--card-bg)] rounded-lg">
+                            <h5 class="font-semibold text-lg flex items-center"><i class="fas ${meal.icon} mr-2 text-[var(--primary-color)]"></i>${meal.name}</h5>
+                            <p class="text-sm my-2">${meal.description}</p>
+                            <h6 class="font-bold mt-2">Ingredientes:</h6>
+                            <ul class="list-disc list-inside space-y-1">${ingredientsList}</ul>
+                            <h6 class="font-bold mt-4">Preparación:</h6>
+                            <p class="text-sm mt-1">${meal.preparation}</p>
+                            ${mealScheduleHtml}
+                        </div>
+                    `;
+                } else if (dailyDietType === 'humeda') {
+                    meal = wetFoodVarieties[i % wetFoodVarieties.length];
+                    const ingredientsList = meal.ingredients(kcal).map(item => `<li>${item}</li>`).join('');
+                    dailyContent = `
+                        <div class="p-4 bg-[var(--card-bg)] rounded-lg">
+                            <h5 class="font-semibold text-lg flex items-center"><i class="fas ${meal.icon} mr-2 text-[var(--primary-color)]"></i>${meal.name}</h5>
+                            <p class="text-sm my-2">${meal.description}</p>
+                            <h6 class="font-bold mt-2">Ingredientes (Cantidad diaria total: ${totalGrams} g):</h6>
+                            <ul class="list-disc list-inside space-y-1">${ingredientsList}</ul>
+                            <h6 class="font-bold mt-4">Preparación:</h6>
+                            <p class="text-sm mt-1">${meal.preparation}</p>
+                            ${mealScheduleHtml}
+                        </div>
+                    `;
+                } else { // Pienso
+                    const prep = preparationInstructions[dailyDietType];
+                    dailyContent = `
+                        <div class="p-4 bg-[var(--card-bg)] rounded-lg">
+                            <h5 class="font-semibold text-lg"><i class="fas fa-balance-scale mr-2 text-[var(--primary-color)]"></i>Cantidad Diaria</h5>
+                            <p class="font-bold">${totalGrams} g de ${prep.title}</p>
+                            <h5 class="font-semibold text-lg mt-4"><i class="fas fa-utensils mr-2 text-[var(--primary-color)]"></i>Preparación</h5>
+                            <p class="text-sm mt-2">${prep.instructions}</p>
+                            ${mealScheduleHtml}
+                        </div>
+                    `;
+                }
+
+                planHTML += `
+                    <details class="group p-4 rounded-lg bg-[var(--card-bg)] cursor-pointer shadow-sm hover:shadow-md transition-all duration-300">
+                        <summary class="flex justify-between items-center font-bold text-[var(--text-color)]">
+                            <span><i class="fas fa-calendar-day mr-2 text-[var(--primary-color)]"></i>Dieta del ${day}</span>
+                            <span class="transition-transform duration-300 group-open:rotate-180">
+                                <i class="fas fa-chevron-down"></i>
+                            </span>
+                        </summary>
+                        <div class="mt-4 border-t pt-4 border-[var(--border-color)]">
+                            ${dailyContent}
+                        </div>
+                    </details>
+                `;
+            }
+
+            planHTML += '</div>';
+            document.getElementById('diet-plan-result').innerHTML = planHTML;
+            document.getElementById('diet-plan-result').classList.remove('hidden');
+        };
+
+        // Datos para las tablas de alimentos.
+        // Data for food tables.
+        const foodData = {
+            safe: [
+                { name: 'Pollo cocido (sin piel)', benefit: 'Excelente fuente de proteína magra. Cocínalo sin sal ni condimentos.' },
+                { name: 'Ternera magra cocida', benefit: 'Rica en hierro y vitaminas B. Cocínala bien y sin grasa adicional.' },
+                { name: 'Pavo cocido', benefit: 'Otra proteína magra y fácil de digerir. Retira la piel y huesos.' },
+                { name: 'Salmón cocido', benefit: 'Ácidos grasos Omega-3 para la salud de la piel, pelaje y articulaciones.' },
+                { name: 'Arroz blanco cocido', benefit: 'Fácil de digerir. Ayuda en problemas estomacales.' },
+                { name: 'Patatas cocidas (sin piel)', benefit: 'Buena fuente de carbohidratos, potasio y vitaminas.' },
+                { name: 'Avena cocida', benefit: 'Fibra soluble que ayuda a la digestión. Cocínala con agua.' },
+                { name: 'Zanahorias', benefit: 'Bajas en calorías, ricas en fibra y vitamina A. Crujientes para la salud dental.' },
+                { name: 'Calabaza (cocida)', benefit: 'Gran fuente de fibra para la digestión y el tránsito intestinal.' },
+                { name: 'Judías verdes', benefit: 'Bajos en calorías, ideales para perros con sobrepeso.' },
+                { name: 'Manzanas (sin semillas)', benefit: 'Fuente de vitaminas C, A y fibra. Las semillas contienen cianuro.' },
+                { name: 'Plátanos', benefit: 'Potasio, vitaminas, pero con moderación por su alto contenido de azúcar.' },
+                { name: 'Arándanos', benefit: 'Llenos de antioxidantes que ayudan a combatir el daño celular.' },
+                { name: 'Huevos cocidos', benefit: 'Gran fuente de proteína completa y fácil de digerir.' },
+                { name: 'Yogur natural (sin azúcar)', benefit: 'Probióticos beneficiosos para el sistema digestivo.' },
+                { name: 'Mantequilla de cacahuete (sin xilitol)', benefit: 'Fuente de grasas saludables y proteínas. Revisa la etiqueta, el xilitol es tóxico.' }
+            ],
+            unsafe: [
+                { name: 'Chocolate', risk: 'Contiene teobromina y cafeína, tóxicas para los perros. Afecta el sistema nervioso y el corazón.' },
+                { name: 'Cebollas, ajo, puerro', risk: 'Dañan los glóbulos rojos, causando anemia. Incluso en polvo.' },
+                { name: 'Uvas y pasas', risk: 'Pueden causar insuficiencia renal aguda, incluso en pequeñas cantidades. Su toxicidad es impredecible.' },
+                { name: 'Xilitol (edulcorante)', risk: 'Presente en chicles, dulces, etc. Extremadamente tóxico, puede causar fallo hepático.' },
+                { name: 'Aguacate', risk: 'Contiene persina, tóxica para los perros, que puede causar vómitos y diarrea.' },
+                { name: 'Alcohol', risk: 'Incluso una pequeña cantidad puede ser mortal. Afecta el cerebro y el hígado.' },
+                { name: 'Nueces de macadamia', risk: 'Causa debilidad, temblores musculares, vómitos y fiebre.' },
+                { name: 'Huesos cocinados', risk: 'Se astillan fácilmente, causando perforaciones o bloqueos en el tracto digestivo.' },
+                { name: 'Masa cruda con levadura', risk: 'Se expande en el estómago, causando hinchazón peligrosa y producción de alcohol.' },
+                { name: 'Café y cafeína', risk: 'Afecta el sistema nervioso central y el corazón, causando hiperactividad, palpitaciones y temblores.' },
+                { name: 'Alimentos con sal en exceso', risk: 'Puede causar envenenamiento por iones de sodio, provocando sed excesiva, vómitos y en casos graves, la muerte.' }
+            ]
+        };
+
+        // Función para inicializar y poblar las tablas de alimentos.
+        // Function to initialize and populate the food tables.
+        const initFoodTables = () => {
+            const safeTable = document.getElementById('safe-foods-table');
+            const unsafeTable = document.getElementById('unsafe-foods-table');
+            // Itera sobre los datos y crea las filas de la tabla para alimentos seguros.
+            // Iterates over the data and creates table rows for safe foods.
+            foodData.safe.forEach(food => {
+                safeTable.innerHTML += `<tr><td class="py-2 pr-2 font-semibold">${food.name}</td><td class="py-2 hidden md:table-cell">${food.benefit}</td></tr>`;
+            });
+            // Itera sobre los datos y crea las filas de la tabla para alimentos prohibidos.
+            // Iterates over the data and creates table rows for prohibited foods.
+            foodData.unsafe.forEach(food => {
+                unsafeTable.innerHTML += `<tr><td class="py-2 pr-2 font-semibold">${food.name}</td><td class="py-2 hidden md:table-cell">${food.risk}</td></tr>`;
+            });
+        };
+
+        // Datos para las recomendaciones de ejercicio.
+        // Data for exercise recommendations.
+        const exerciseData = [
+            { id: 1, title: 'Paseos Cortos', size: ['small', 'medium', 'large'], energy: 'low', description: '20-30 min, ideal para mantenimiento, perros mayores o de baja energía.', icon: 'fa-walking' },
+            { id: 2, title: 'Juego de Cobro', size: ['medium', 'large'], energy: 'medium', description: '15-20 min de buscar y traer para quemar energía y estimular la mente.', icon: 'fa-baseball-ball' },
+            { id: 3, title: 'Correr / Senderismo', size: ['medium', 'large'], energy: 'high', description: '45+ min, excelente para razas activas que necesitan liberar mucha energía.', icon: 'fa-hiking' },
+            { id: 4, title: 'Juegos de Olfato', size: ['small', 'medium', 'large'], energy: 'low', description: '10-15 min, esconde premios. Cansa mentalmente sin esfuerzo físico.', icon: 'fa-search' },
+            { id: 5, title: 'Agility (básico)', size: ['small', 'medium'], energy: 'high', description: 'Circuitos caseros con saltos bajos y túneles para coordinación y obediencia.', icon: 'fa-trophy' },
+            { id: 6, title: 'Natación', size: ['medium', 'large'], energy: 'medium', description: 'Ejercicio de bajo impacto ideal para las articulaciones.', icon: 'fa-swimmer' }
+        ];
+
+        // Función para inicializar los filtros de ejercicio.
+        // Function to initialize the exercise filters.
+        const initExerciseFilter = () => {
+            const sizeFilter = document.getElementById('size-filter');
+            const energyFilter = document.getElementById('energy-filter');
+            const exerciseList = document.getElementById('exercise-list');
+
+            // Función para renderizar los ejercicios según los filtros.
+            // Function to render exercises based on filters.
+            const renderExercises = () => {
+                const selectedSize = sizeFilter.value;
+                const selectedEnergy = energyFilter.value;
+
+                exerciseList.innerHTML = '';
+                
+                const filteredExercises = exerciseData.filter(ex => 
+                    (selectedSize === 'all' || ex.size.includes(selectedSize)) &&
+                    (selectedEnergy === 'all' || ex.energy === selectedEnergy)
+                );
+
+                if(filteredExercises.length === 0){
+                    exerciseList.innerHTML = `<p class="col-span-full text-center">No se encontraron ejercicios con estos filtros.</p>`;
+                    return;
+                }
+
+                filteredExercises.forEach(ex => {
+                    exerciseList.innerHTML += `
+                    <div class="card p-5">
+                        <h4 class="font-bold text-lg mb-2"><i class="fas ${ex.icon} mr-2 text-[var(--primary-color)]"></i>${ex.title}</h4>
+                        <p>${ex.description}</p>
+                    </div>
+                    `;
+                });
+            };
+            
+            // Asigna los listeners a los filtros.
+            // Assigns listeners to the filters.
+            sizeFilter.addEventListener('change', renderExercises);
+            energyFilter.addEventListener('change', renderExercises);
+            // Renderiza los ejercicios iniciales.
+            // Renders the initial exercises.
+            renderExercises();
+        };
+
+        // Función para inicializar el "scroll spy" en la navegación.
+        // Function to initialize the navigation "scroll spy".
+        const initScrollSpy = () => {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('#desktop-nav a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.toggle('active', link.getAttribute('href').substring(1) === entry.target.id);
+                        });
+                    }
+                });
+            }, { rootMargin: '-50% 0px -50% 0px' });
+
+            sections.forEach(sec => observer.observe(sec));
+        };
+
+        // Función para inicializar Firebase.
+        // Function to initialize Firebase.
+        const initFirebase = () => {
+            try {
+                // Habilita el registro de depuración de Firebase.
+                // Enables Firebase debug logging.
+                setLogLevel('debug');
+                // Inicializa la aplicación de Firebase.
+                // Initializes the Firebase app.
+                const app = initializeApp(firebaseConfig);
+                // Obtiene la instancia de autenticación.
+                // Gets the authentication instance.
+                auth = getAuth(app);
+                // Obtiene la instancia de Firestore.
+                // Gets the Firestore instance.
+                db = getFirestore(app);
+                
+                // Observador para el estado de autenticación del usuario.
+                // Observer for the user's authentication state.
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        // Si el usuario está autenticado, guarda su ID.
+                        // If the user is authenticated, save their ID.
+                        userId = user.uid;
+                        // Muestra el ID del usuario en la interfaz.
+                        // Displays the user ID in the UI.
+                        document.getElementById('auth-status').textContent = `ID de usuario: ${userId}`;
+                        setupWeightTracker();
+                    } else {
+                        // Si no hay usuario, intenta iniciar sesión.
+                        // If there is no user, try to sign in.
+                        try {
+                             if (initialAuthToken) {
+                                // Inicia sesión con el token de autenticación personalizado.
+                                // Signs in with the custom authentication token.
+                                await signInWithCustomToken(auth, initialAuthToken);
+                             } else {
+                                // Inicia sesión de forma anónima.
+                                // Signs in anonymously.
+                                await signInAnonymously(auth);
+                             }
+                        } catch (error) {
+                            console.error("Firebase Auth Error:", error);
+                            document.getElementById('auth-status').textContent = `Error de autenticación: ${error.message}`;
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Firebase init failed:", error);
+                document.getElementById('auth-status').textContent = `Error de inicialización de Firebase: ${error.message}`;
+            }
+        };
+
+        // Función para configurar el registro de peso.
+        // Function to set up the weight tracker.
+        const setupWeightTracker = () => {
+            const weightForm = document.getElementById('weight-form');
+            const recordsTableBody = document.getElementById('records-table-body');
+            const noRecordsMsg = document.getElementById('no-records-message');
+            const recordsTable = document.getElementById('weight-records-table');
+            const downloadPdfBtn = document.getElementById('download-pdf-btn');
+            
+            // Configura un listener en tiempo real para los registros de peso en Firestore.
+            // Sets up a real-time listener for weight records in Firestore.
+            const recordsPath = `/artifacts/${appId}/users/${userId}/weight-records`;
+            const q = query(collection(db, recordsPath), orderBy("timestamp", "desc"));
+            
+            // onSnapshot se ejecuta cada vez que hay un cambio en la colección.
+            // onSnapshot executes whenever there's a change in the collection.
+            onSnapshot(q, (snapshot) => {
+                recordsTableBody.innerHTML = '';
+                const records = [];
+                snapshot.forEach(doc => {
+                    records.push(doc.data());
+                });
+
+                if (records.length > 0) {
+                    recordsTable.classList.remove('hidden');
+                    noRecordsMsg.classList.add('hidden');
+                    downloadPdfBtn.classList.remove('hidden');
+                    records.forEach(record => {
+                        const date = new Date(record.timestamp.seconds * 1000).toLocaleString();
+                        const row = `
+                            <tr class="border-b dark:border-gray-700">
+                                <td class="py-2">${date}</td>
+                                <td class="py-2">${record.animalName}</td>
+                                <td class="py-2 font-bold accent-text">${record.weight.toFixed(1)} kg</td>
+                            </tr>
+                        `;
+                        recordsTableBody.innerHTML += row;
+                    });
+                } else {
+                    recordsTable.classList.add('hidden');
+                    noRecordsMsg.classList.remove('hidden');
+                    downloadPdfBtn.classList.add('hidden');
+                }
+            }, (error) => {
+                console.error("Failed to fetch records:", error);
+                noRecordsMsg.textContent = "Error al cargar los registros.";
+                noRecordsMsg.classList.remove('hidden');
+            });
+
+            // Maneja el envío del formulario.
+            // Handles form submission.
+            weightForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const animalName = document.getElementById('animal-name').value;
+                const animalWeight = parseFloat(document.getElementById('animal-weight').value);
+                
+                // Valida los datos del formulario.
+                // Validates form data.
+                if (animalName.trim() === '' || isNaN(animalWeight) || animalWeight <= 0) {
+                     const status = document.getElementById('auth-status');
+                     status.textContent = 'Por favor, introduce un nombre y un peso válido.';
+                     setTimeout(() => {
+                         status.textContent = `ID de usuario: ${userId}`;
+                     }, 3000);
+                    return;
+                }
+
+                try {
+                    // Añade un nuevo documento a la colección de Firestore.
+                    // Adds a new document to the Firestore collection.
+                    await addDoc(collection(db, recordsPath), {
+                        animalName: animalName,
+                        weight: animalWeight,
+                        timestamp: serverTimestamp()
+                    });
+                    weightForm.reset();
+                } catch (error) {
+                    console.error("Error adding document:", error);
+                    document.getElementById('auth-status').textContent = "Error al guardar el registro.";
+                }
+            });
+
+            // Maneja la generación del PDF.
+            // Handles PDF generation.
+            downloadPdfBtn.addEventListener('click', async () => {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const title = "Informe de Peso de la Mascota";
+                const tableContainer = document.getElementById('weight-records-table');
+
+                pdf.setFontSize(24);
+                pdf.text(title, 105, 20, null, null, "center");
+                pdf.setFontSize(12);
+                pdf.text(`Generado el: ${new Date().toLocaleDateString()}`, 105, 30, null, null, "center");
+
+                // Crea una tabla temporal para una mejor apariencia en el PDF.
+                // Creates a temporary table for a better appearance in the PDF.
+                const tempTable = document.createElement('table');
+                tempTable.style.width = '100%';
+                tempTable.style.borderCollapse = 'collapse';
+                tempTable.innerHTML = `
+                    <thead>
+                        <tr style="background-color: #f2f2f2; font-weight: bold;">
+                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left; color: #333;">Fecha</th>
+                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left; color: #333;">Mascota</th>
+                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left; color: #333;">Peso (kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recordsTableBody.innerHTML.replace(/<tr/g, '<tr style="border-bottom: 1px solid #ddd;"').replace(/<td/g, '<td style="padding: 8px; color: #444;"')}
+                    </tbody>
+                `;
+
+                // Añade temporalmente la tabla al cuerpo para ser capturada.
+                // Temporarily appends the table to the body to be captured.
+                document.body.appendChild(tempTable);
+
+                html2canvas(tempTable).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgWidth = 190;
+                    const pageHeight = 295;
+                    const imgHeight = canvas.height * imgWidth / canvas.width;
+                    let heightLeft = imgHeight;
+                    let position = 40;
+
+                    pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    // Guarda el archivo PDF.
+                    // Saves the PDF file.
+                    pdf.save("registro-peso-mascota.pdf");
+                }).finally(() => {
+                     // Elimina la tabla temporal del cuerpo.
+                     // Removes the temporary table from the body.
+                     document.body.removeChild(tempTable);
+                });
+            });
+        };
+
+        // Escucha el evento 'DOMContentLoaded' para iniciar la aplicación una vez que el HTML esté cargado.
+        // Listens for the 'DOMContentLoaded' event to start the application once the HTML is loaded.
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            initMobileMenu();
+            initMacrosChart();
+            initPlanner();
+            initFoodTables();
+            initExerciseFilter();
+            initScrollSpy();
+            initFirebase(); // Inicializa Firebase y el rastreador de peso. / Initializes Firebase and the weight tracker.
+        });
+    </script>
+</body>
+</html>
